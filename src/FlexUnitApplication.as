@@ -8,6 +8,8 @@ package
 	
 	import flexunit.flexui.FlexUnitTestRunnerUIAS;
 	
+	import org.flexunit.runner.Request;
+	
 	public class FlexUnitApplication extends Sprite
 	{
 		public function FlexUnitApplication()
@@ -26,7 +28,13 @@ package
 		public function currentRunTestSuite():Array
 		{
 			var testsToRun:Array = new Array();
-			testsToRun.push(core_obj_tests.GuidObjectTest);
+			testsToRun.push(Request.methods(core_obj_tests.GuidObjectTest,["testGetByte",
+				"testGetInt16",
+				"testGetInt32",
+				"testGetStr",
+				"testGetUInt16",
+				"testGetUInt32"]));
+			
 			return testsToRun;
 		}
 	}

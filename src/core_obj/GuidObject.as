@@ -54,6 +54,7 @@ package core_obj
 		
 		public function GuidObject()
 		{
+			super();
 		}		
 		
 		/////////////////////////////////////////////////////////////////////
@@ -126,17 +127,17 @@ package core_obj
 			_uint32_values.writeShort(value);
 		}
 		
-		public function GetInt16(index:int,offset:int):uint
+		public function GetInt16(index:int,offset:int):int
 		{
 			if(_uint32_values.length > (index << 2)){
 				_uint32_values.position = (index << 2) + (offset << 1);
-				return _uint32_values.readUnsignedShort();	
+				return _uint32_values.readShort();	
 			}
 			
 			return 0;
 		}
 		
-		public function SetInt16(index:int,offset:int,value:uint):void
+		public function SetInt16(index:int,offset:int,value:int):void
 		{
 			OnEvent(OPT_SET,index,offset,value,TYPE_INT16);
 			
@@ -185,7 +186,6 @@ package core_obj
 			_str_values[index] = val;
 		}
 		
-		
 		///////////////////////////////////////////////////////////////////////////////////////////
 		//以下为对象传输相关
 		
@@ -212,7 +212,7 @@ package core_obj
 			return true;
 		}
 		
-		public function WriteValues(mask:UpdateMask,mask_string:UpdateMask,bytes:ByteArray):void
+		public function WriteUpdateValues(mask:UpdateMask,mask_string:UpdateMask,bytes:ByteArray):void
 		{					
 			//先写入整形下标变化
 			mask.WriteTo(bytes);

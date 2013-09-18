@@ -258,7 +258,7 @@ package core_obj
 		{
 			if(_opt & OPT_UPDATE || _opt & OPT_NEW)
 				throw new Error("BinLogStru.WriteTo (_opt & OPT_UPDATE || _opt & OPT_NEW)");
-			bytes.writeByte(_opt);
+//			bytes.writeByte(_opt);
 			bytes.writeByte(_typ);
 			bytes.writeShort(_index);
 			bytes.writeByte(_atomic_opt);	//输出非原子操作

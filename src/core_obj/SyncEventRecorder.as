@@ -155,7 +155,7 @@ package core_obj
 				if(binlog.opt & OPT_NEW){
 					mask.Clear();
 				}else if(binlog.opt & OPT_UPDATE){
-					obj.WriteValues(_mask,_mask_string,bytes);
+					obj.WriteUpdateValues(_mask,_mask_string,bytes);
 				}else
 					binlog.WriteTo(bytes);	
 			}
