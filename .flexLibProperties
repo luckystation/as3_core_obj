@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="core_obj.GuidObjectTable"/>
+    <classEntry path="core_obj.GuidObject"/>
+    <classEntry path="core_obj.SyncEventRecorder"/>
+    <classEntry path="core_obj.BinLogStru"/>
+    <classEntry path="core_obj.SyncEvent"/>
+    <classEntry path="core_obj.UpdateMask"/>
+    <classEntry path="core_obj_tests.UpdateMaskTest"/>
+    <classEntry path="core_obj_tests.BinLogStruTest"/>
+    <classEntry path="core_obj.EventDispatcher"/>
+    <classEntry path="core_obj_tests.EventDispatcherTest"/>
+    <classEntry path="core_obj_tests.GuidObjectTest"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>
