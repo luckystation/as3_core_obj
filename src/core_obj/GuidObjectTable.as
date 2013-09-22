@@ -89,11 +89,7 @@ package core_obj
 		 * 
 		 */		
 		public function ReadFrom(bytes:ByteArray):Boolean
-		{
-			//是否无效对象
-			var invalid_obj:Boolean = false;
-			var is_new_event:Boolean = false;
-			
+		{			
 			var guid:String = bytes.readUTF();
 			var count:int = bytes.readUnsignedShort();
 			
@@ -102,56 +98,21 @@ package core_obj
 				cur_obj = CreateObject(guid);
 			}
 			
-			var binlog:BinLogStru = new BinLogStru();
-			var mask:UpdateMask = new UpdateMask();
+			
 			
 			for(var i:int = 0; i < count; i++){
 				//事件标志
 				var flags:int = bytes.readUnsignedByte();
-				if(flags & OPT_NEW || flags & OPT_UPDATE){
-					//创建包需要将所有的值清空
-					if(flags & OPT_NEW){
-						is_new_event = true;
-						invalid_obj = false;
-						cur_obj.Reset(guid);
-					}
-					//用于更新时使用的掩码
-					mask.ReadFrom(bytes);
-					//读取整数
-					cur_obj.ReadValues(mask,bytes);
-					
-					//触发一下事件
-					binlog.Clear();
-					binlog._opt = flags;
-					binlog._typ = TYPE_UINT32;
-					binlog._value_mask = mask;
-					cur_obj.OnEventSyncBinLog(binlog);
-					
-					//读取字符串
-					mask.ReadFrom(bytes);
-					cur_obj.ReadStringValues(mask,bytes);
-					
-					binlog.Clear();
-					binlog._opt = flags;
-					binlog._typ = TYPE_STRING;
-					binlog._value_mask = mask;
-					cur_obj.OnEventSyncBinLog(binlog);
-					
-					//触发创建对象事件
-					if(is_new_event && !invalid_obj)
-						DispatchNewObject(cur_obj);
-				} else if(flags & OPT_DELETE) {
+				
+				cur_obj.ReadFrom(flags,bytes);
+				
+				if(flags &OPT_NEW)
+					DispatchNewObject(cur_obj);
+				else if(flags & OPT_DELETE){
 					DispatchCloseObject(cur_obj);
-					ReleaseKey(guid);					
-				} else {
-					binlog.ReadFrom(flags,bytes);
-					if(binlog._atomic_opt){
-						cur_obj.ApplyAtomicBinLog(binlog);	//原子操作
-					} else {
-						cur_obj.ApplyBinLog(binlog);
-					}
-					cur_obj.OnEventSyncBinLog(binlog);
+					ReleaseKey(guid);
 				}
+					
 			}
 			return true;
 		}

@@ -2,7 +2,7 @@ package
 {
 	import Array;
 	
-	import core_obj_tests.GuidObjectTest;
+	import core_obj_tests.EventDispatcherTest;
 	
 	import flash.display.Sprite;
 	
@@ -28,12 +28,7 @@ package
 		public function currentRunTestSuite():Array
 		{
 			var testsToRun:Array = new Array();
-			testsToRun.push(Request.methods(core_obj_tests.GuidObjectTest,["testGetByte",
-				"testGetInt16",
-				"testGetInt32",
-				"testGetStr",
-				"testGetUInt16",
-				"testGetUInt32"]));
+			testsToRun.push(Request.methods(core_obj_tests.EventDispatcherTest,["testDispatch"]));
 			
 			return testsToRun;
 		}

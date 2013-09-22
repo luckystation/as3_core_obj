@@ -42,27 +42,32 @@ package core_obj
 			_event_index = new Vector.<int>;
 		}		
 		
-		private function DispatchIndex():void
+		/**
+		 * 触发该事件的参数 
+		 * @param param
+		 * 
+		 */		
+		private function DispatchIndex(param:Object):void
 		{
 			//先触发
 			var i:int;
 			if(_event_key_type == KEY_TYPE_STRING){
 				for(i in _event_index){
-					_event_callback[i]();
+					_event_callback[i](param);
 					_event_callback.splice(i,1);
 					_event_id_str.splice(i,1);
 				}
 				
 			}else{
 				for(i in _event_index){
-					_event_callback[i]();
+					_event_callback[i](param);
 					_event_callback.splice(i,1);
 					_event_id_int.splice(i,1);
 				}
 			}			
 		}
 		
-		public function DispatchString(key:String):void
+		public function DispatchString(key:String,param:Object):void
 		{
 			//先清空
 			_event_index.length = 0;
@@ -75,10 +80,10 @@ package core_obj
 			}
 			//大部分是不触发的
 			if(_event_index.length)
-				DispatchIndex();
+				DispatchIndex(param);
 		}
 		
-		public function DispatchInt(key:int):void
+		public function DispatchInt(key:int,param:Object):void
 		{
 			_event_index.length = 0;
 			
@@ -91,9 +96,38 @@ package core_obj
 			
 			//大部分是不触发的
 			if(_event_index.length)
-				DispatchIndex();
+				DispatchIndex(param);
 		}
 		
+		/**
+		 * 根据规则触发整数回调
+		 *  
+		 * @param param
+		 * @param pred 回调格式 pred(index,binlog)->bool
+		 * 
+		 */
+		public function Dispatch(param:Object,pred:Function):void
+		{
+			_event_index.length = 0;
+			
+			var len:int = _event_callback.length;
+			for(var i:int=0; i<len; i++){
+				//传入事件ID/事件参数，由函数指针
+				if(pred(_event_id_int[i],param))
+					_event_index.unshift(i);
+			}
+			
+			//大部分是不触发的
+			if(_event_index.length)
+				DispatchIndex(param);
+		}
+				
+		/**
+		 * 添加回调监听,监听ID手工指定
+		 * @param key	事件ID
+		 * @param f		回调函数闭包,可以支持一个参数(Object)
+		 * 
+		 */		
 		public function AddListenInt(key:int,f:Function):void
 		{
 			if(_event_key_type == KEY_TYPE_STRING)
@@ -112,6 +146,13 @@ package core_obj
 			_event_callback.push(f);
 		}
 		
+		/**
+		 *  添加回调监听,事件ID自增后并返回
+		 * 
+		 * @param f	事件支持一个参数,Object
+		 * @return 
+		 * 
+		 */		
 		public function AddCallback(f:Function):int
 		{
 			if(_event_key_type == KEY_TYPE_STRING)
