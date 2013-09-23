@@ -37,7 +37,7 @@ package core_obj
 		{
 			var p:GuidObject = _objs[k];
 			if(!p){
-				p = new GuidObject();
+				p = new GuidObject(_mode);
 				p.add_ref(1);
 				_objs[k] = p;
 			}
@@ -98,21 +98,18 @@ package core_obj
 				cur_obj = CreateObject(guid);
 			}
 			
-			
-			
 			for(var i:int = 0; i < count; i++){
 				//事件标志
-				var flags:int = bytes.readUnsignedByte();
-				
+				var flags:int = bytes.readUnsignedByte();	
 				cur_obj.ReadFrom(flags,bytes);
 				
+				//触发事件
 				if(flags &OPT_NEW)
 					DispatchNewObject(cur_obj);
 				else if(flags & OPT_DELETE){
 					DispatchCloseObject(cur_obj);
 					ReleaseKey(guid);
 				}
-					
 			}
 			return true;
 		}

@@ -12,6 +12,7 @@
     <classEntry path="core_obj.EventDispatcher"/>
     <classEntry path="core_obj_tests.EventDispatcherTest"/>
     <classEntry path="core_obj_tests.GuidObjectTest"/>
+    <classEntry path="core_obj_tests.SyncEventRecorderTest"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
