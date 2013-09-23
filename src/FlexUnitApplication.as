@@ -2,7 +2,7 @@ package
 {
 	import Array;
 	
-	import core_obj_tests.EventDispatcherTest;
+	import core_obj_tests.SyncEventRecorderTest;
 	
 	import flash.display.Sprite;
 	
@@ -28,7 +28,7 @@ package
 		public function currentRunTestSuite():Array
 		{
 			var testsToRun:Array = new Array();
-			testsToRun.push(Request.methods(core_obj_tests.EventDispatcherTest,["testDispatch"]));
+			testsToRun.push(Request.methods(core_obj_tests.SyncEventRecorderTest,["testReadFrom"]));
 			
 			return testsToRun;
 		}

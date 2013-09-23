@@ -1,7 +1,5 @@
 package core_obj
-{
-	import flash.utils.ByteArray;
-	
+{	
 	public class GuidObject extends SyncEventRecorder
 	{
 		
@@ -38,9 +36,9 @@ package core_obj
 			_guid = g;
 		}		
 		
-		public function GuidObject()
+		public function GuidObject(mode:int = 0)
 		{
-			super();
+			super(mode);
 		}
 		
 		/////////////////////////////////////////////////////////////////////

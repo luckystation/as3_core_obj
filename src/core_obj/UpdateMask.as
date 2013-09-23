@@ -9,7 +9,7 @@ package core_obj
 		public function UpdateMask()
 		{
 		}
-		
+
 		public function Clear():void
 		{
 			_bytes.position = 0;
