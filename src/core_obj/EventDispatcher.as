@@ -121,7 +121,7 @@ package core_obj
 			if(_event_index.length)
 				DispatchIndex(param);
 		}
-				
+
 		/**
 		 * 添加回调监听,监听ID手工指定
 		 * @param key	事件ID

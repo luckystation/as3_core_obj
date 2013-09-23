@@ -41,12 +41,12 @@ package core_obj
 		/**
 		 * 当记录器是主模式下时，主要记录的是变化的下标 
 		 */		
-		private var _mask:UpdateMask = new UpdateMask;
+		private var _mask:UpdateMask;
 		
 		/**
 		 * 记录字符下标的变化 
 		 */		
-		private var _mask_string:UpdateMask = new UpdateMask;
+		private var _mask_string:UpdateMask;
 		
 		//将所有
 		protected var _uint32_values:ByteArray = new ByteArray;
@@ -55,10 +55,24 @@ package core_obj
 		protected var _str_values:Vector.<String> = new Vector.<String>();
 		
 		//对象的唯一ID
-		protected var _guid:String = "";
+		protected var _guid:String = "";		
 		
-		public function SyncEventRecorder()
+		public function SyncEventRecorder(mode:int)
 		{
+			_mode = mode;
+			//主模式下有一个binlog用于UpdateMask
+			if(_mode == SYNC_MASTER){
+				_mask = new UpdateMask;
+				_mask_string = new UpdateMask;
+				
+				//
+				var binlog:BinLogStru = new BinLogStru;				
+				binlog.opt = OPT_UPDATE;
+				_binlogs.push(binlog);
+			}else{
+				_mask = null;
+				_mask_string = null;
+			}
 			super();
 		}
 		
@@ -67,63 +81,111 @@ package core_obj
 			_events_value.Clear();
 			_events_str_values.Clear();
 			_events_callback.Clear();
-			_binlogs.length = 0;
-			_mask.Clear();
-			_mask_string.Clear();
+			
+			if(_mask) 
+				_mask.Clear();
+			if(_mask_string)
+				_mask_string.Clear();
 			
 			_str_values.length = 0;
-			_uint32_values.length = 0;
+			_uint32_values.length = 0;			
+			
+			//主模式下永远保存着第一个binlog为OPT_UPDATE
+			if(_mode == SYNC_MASTER){
+				_binlogs.length = 1;
+				_binlogs[0].Clear();
+			}
+			else _binlogs.length = 0;
 		}
+		
+//		
+//		public function OnEventNew(k:String):void
+//		{		
+//			if(k.length == 0)
+//				throw new Error("OnEventNew but k.length == 0");
+//			_guid = k;
+//			var binlog:BinLogStru = new BinLogStru;
+//			binlog.opt = OPT_NEW;
+//			_binlogs.push(binlog);
+//		}
+//		
+//		public function OnEventDelete(k:String):void
+//		{	
+//			if(k.length == 0)
+//				throw new Error("OnEventDelete but k.length == 0");
+//			_guid = k;
+//			var binlod:BinLogStru = new BinLogStru;
+//			binlod.opt = OPT_DELETE;
+//			_binlogs.push(binlod);
+//		}
 
 		protected function OnEventUInt32(opt:int,index:int,value:uint):void
 		{
-			var binlog:BinLogStru = new BinLogStru();
-			binlog.opt = opt;
-			binlog.index = index;			
-			binlog.uint32 = value;
-			_binlogs.push(binlog);
+			//从模式下记录下标操作记录
+			//主模式下记录哪些下标发生变化,直接覆盖式更新即可
+			if(_mode == SYNC_SLAVE){
+				var binlog:BinLogStru = new BinLogStru();
+				binlog.opt = opt;
+				binlog.index = index;			
+				binlog.uint32 = value;
+				_binlogs.push(binlog);	
+			}else if(_mode == SYNC_MASTER){
+				_mask.SetBit(index);
+			}
 		}
-
+		
 		protected function OnEvent(opt:int,index:int,offset:int,value:int,typ:int):void
 		{
-			var binlog:BinLogStru = new BinLogStru();
-			binlog.opt = opt;
-			binlog.index = index;			
-			switch(typ)
-			{
-				case TYPE_UINT32:
-					binlog.uint32 = value;
-					break;
-				case TYPE_INT32:
-					binlog.int32 = value;
-					break;
-				case TYPE_UINT16:
-					binlog.uint16 = value;
-					binlog.offset = offset;
-					break;
-				case TYPE_UINT8:
-					binlog.uint8 = value;
-					binlog.offset = offset;
-					break;				
-				case TYPE_INT16:
-					binlog.int16 = value;
-					binlog.offset = offset;
-					break;
-				case TYPE_INT8:
-					binlog.int8 = value;
-					binlog.offset = offset;
-					break;
+			//从模式下记录下标操作记录
+			//主模式下记录哪些下标发生变化,直接覆盖式更新即可
+			if(_mode == SYNC_SLAVE){
+				var binlog:BinLogStru = new BinLogStru();
+				binlog.opt = opt;
+				binlog.index = index;			
+				switch(typ)
+				{
+					case TYPE_UINT32:
+						binlog.uint32 = value;
+						break;
+					case TYPE_INT32:
+						binlog.int32 = value;
+						break;
+					case TYPE_UINT16:
+						binlog.uint16 = value;
+						binlog.offset = offset;
+						break;
+					case TYPE_UINT8:
+						binlog.uint8 = value;
+						binlog.offset = offset;
+						break;				
+					case TYPE_INT16:
+						binlog.int16 = value;
+						binlog.offset = offset;
+						break;
+					case TYPE_INT8:
+						binlog.int8 = value;
+						binlog.offset = offset;
+						break;
+				}
+				_binlogs.push(binlog);
+			}else if(_mode == SYNC_MASTER){
+				_mask.SetBit(index);
 			}
-			_binlogs.push(binlog);
 		}
 		
 		protected function OnEventStr(opt:int,index:int,val:String):void
 		{
-			var binlog:BinLogStru = new BinLogStru;
-			binlog.opt = opt;
-			binlog.index = index;
-			binlog.str = val;
-			_binlogs.push(binlog);
+			//从模式下记录下标操作记录
+			//主模式下记录哪些下标发生变化,直接覆盖式更新即可
+			if(_mode == SYNC_SLAVE){
+				var binlog:BinLogStru = new BinLogStru;
+				binlog.opt = opt;
+				binlog.index = index;
+				binlog.str = val;
+				_binlogs.push(binlog);
+			}else if(_mode == SYNC_MASTER){
+				_mask_string.SetBit(index);	
+			}
 		}
 		
 		private function OnEventSyncBinLog(binlog:BinLogStru):void
@@ -215,9 +277,12 @@ package core_obj
 		
 		private function ReadStringValues(mask:UpdateMask,bytes:ByteArray):Boolean
 		{
-			var length:int = mask.GetCount();
+			var length:int = mask.GetCount();			
 			for(var i:int = 0; i < length; i++){
 				if(mask.GetBit(i)){
+					//这样的性能并不好，但是可以节约内存，而且字符下标的用途比较少
+					if(i >= _str_values.length)
+						_str_values.length = i+1;
 					_str_values[i] = bytes.readUTF();
 				}
 			}
@@ -254,7 +319,7 @@ package core_obj
 			mask.Clear();
 			var len:int = _str_values.length;
 			for(var i:int = 0; i < len; i++){
-				if(_str_values[i].length > 0)
+				if(_str_values[i] && _str_values[i].length > 0)
 					mask.SetBit(i);
 			}
 		}
@@ -391,7 +456,7 @@ package core_obj
 		{
 			var binlog:BinLogStru = new BinLogStru();
 			var mask:UpdateMask = new UpdateMask();
-			
+
 			if(flags & OPT_NEW || flags & OPT_UPDATE){
 				//创建包需要将所有的值清空
 				if(flags & OPT_NEW){					
@@ -432,16 +497,63 @@ package core_obj
 			return true;
 		}
 		
-		public function WriteTo(bytes:ByteArray):Boolean
+		/**
+		 * 写入创建块 
+		 * @param bytes
+		 * 
+		 */		
+		public function WriteCreateBlock(bytes:ByteArray):void
+		{
+			//写入标志
+			bytes.writeUTF(_guid);
+			bytes.writeShort(1);
+			bytes.writeByte(OPT_NEW);			
+			
+			var mask:UpdateMask = new UpdateMask;
+			//先写入整形下标
+			GetCreateMask(mask);
+			mask.WriteTo(bytes);
+			WriteValues(mask,bytes);
+			
+			//写入字符下标
+			GetCreateStringMask(mask);
+			mask.WriteTo(bytes);
+			WriteStringValues(mask,bytes);
+		}
+		
+		/**
+		 * 写入离开视野包 
+		 * @param bytes
+		 * 
+		 */		
+		public function WriteReleaseBlock(bytes:ByteArray):void
+		{
+			bytes.writeUTF(_guid);
+			bytes.writeShort(1);
+			bytes.writeByte(OPT_DELETE);			
+		}
+		
+		/**
+		 * 写入更新包 
+		 * @param bytes
+		 * @return 
+		 * 
+		 */		
+		public function WriteUpdateBlock(bytes:ByteArray):Boolean
 		{
 			if(!_binlogs.length)
 				return false;
+
+			bytes.writeUTF(_guid);
+			var len:int = _binlogs.length;
+			bytes.writeShort(len);
 			
-			var mask:UpdateMask = new UpdateMask;
-			
-			for(var binlog:BinLogStru in _binlogs){
-				bytes.writeByte(binlog.opt);
-				if(binlog.opt & OPT_NEW){
+			for(var i:int = 0; i < len; i++){
+				//写入更新标志
+				bytes.writeByte(_binlogs[i].opt);
+				
+				if(_binlogs[i].opt & OPT_NEW){
+					var mask:UpdateMask = new UpdateMask;
 					//先写入整形下标
 					GetCreateMask(mask);
 					WriteValues(mask,bytes);
@@ -449,20 +561,59 @@ package core_obj
 					//写入字符下标
 					GetCreateStringMask(mask);
 					WriteStringValues(mask,bytes);
-				}else if(binlog.opt & OPT_UPDATE){
+				}else if(_binlogs[i].opt & OPT_UPDATE){
 					//先写入整形下标变化
 					_mask.WriteTo(bytes);
-					WriteValues(mask,bytes);
+					WriteValues(_mask,bytes);
 					
 					//写入字符串
 					_mask_string.WriteTo(bytes);
 					WriteStringValues(_mask_string,bytes);					
-				}else{
+				}else if(!(_binlogs[i].opt & OPT_DELETE)){
 					//普通的binlog直接写入即可
-					binlog.WriteTo(bytes);
+					_binlogs[i].WriteTo(bytes);
 				}
 			}
 			return false;
+		}
+		
+		public function Equals(o:SyncEventRecorder):Boolean
+		{			
+			if(_uint32_values.length != o._uint32_values.length)
+				return false;
+
+			//比较整数下标
+			var i:int = 0;
+			var len:int = _uint32_values.length >> 2;
+			
+			for(i=0; i < len; i++){
+				_uint32_values.position = i << 2;
+				o._uint32_values.position = i << 2;
+				
+				if(_uint32_values.readInt() != o._uint32_values.readInt())
+					return false;
+			}
+			
+			//判断这个字符数组是否为空
+			var isEmpty:Function = function(strs:Vector.<String>,i:int):Boolean{
+				if(i >= strs.length)
+					return true;
+				if(!strs[i] || strs[i].length == 0)
+					return true;
+				return false;
+			};
+			
+			len = _str_values.length;
+			
+			for(i = 0; i < len; i++){
+				//如果两边都为空则相等
+				if(isEmpty(_str_values,i) != isEmpty(o._str_values,i))
+					return false;
+				if(_str_values[i] != o._str_values[i])
+					return false;
+			}
+			
+			return true;			
 		}
 	}
 }
